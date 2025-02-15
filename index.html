@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Markdown Editor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.0.2/marked.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-jsx.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+    <style>
+        /* Previous styles remain the same until code-related styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #1a1f25 0%, #2c3e50 100%);
+            height: 100vh;
+            padding: 20px;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .toolbar {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .language-select {
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            color: white;
+            font-family: 'Roboto Condensed', sans-serif;
+            cursor: pointer;
+        }
+
+        .language-select option {
+            background: #2c3e50;
+            color: white;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Roboto Condensed', sans-serif;
+            font-size: 18px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .editor-container {
+            display: flex;
+            height: calc(100vh - 140px);
+        }
+
+        .editor {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .preview {
+            flex: 2;
+            padding: 20px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.1);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .editor textarea {
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: none;
+            color: #fff;
+            font-size: 16px;
+            padding: 15px;
+            border-radius: 8px;
+            resize: none;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .preview pre {
+            position: relative;
+            background: #282c34 !important;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 1em 0;
+        }
+
+        .preview code {
+            font-family: 'Fira Code', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            text-shadow: none;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            padding: 5px 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 3px;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .preview pre:hover .copy-btn {
+            opacity: 1;
+        }
+
+        /* Override Prism styles for better visibility */
+        .token.comment,
+        .token.prolog,
+        .token.doctype,
+        .token.cdata {
+            color: #8b949e;
+        }
+
+        .token.punctuation {
+            color: #c9d1d9;
+        }
+
+        .token.property,
+        .token.tag,
+        .token.boolean,
+        .token.number,
+        .token.constant,
+        .token.symbol,
+        .token.deleted {
+            color: #79c0ff;
+        }
+
+        .token.selector,
+        .token.attr-name,
+        .token.string,
+        .token.char,
+        .token.builtin,
+        .token.inserted {
+            color: #a5d6ff;
+        }
+
+        .token.operator,
+        .token.entity,
+        .token.url,
+        .language-css .token.string,
+        .style .token.string {
+            color: #d2a8ff;
+        }
+
+        .token.atrule,
+        .token.attr-value,
+        .token.keyword {
+            color: #ff7b72;
+        }
+
+        .token.function,
+        .token.class-name {
+            color: #d2a8ff;
+        }
+
+        .token.regex,
+        .token.important,
+        .token.variable {
+            color: #ffa657;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="toolbar">
+            <div class="toolbar-group">
+                <button class="btn" onclick="newFile()">New</button>
+                <button class="btn" onclick="openFile()">Open</button>
+                <button class="btn" onclick="saveFile()">Save</button>
+            </div>
+            <div class="toolbar-group">
+                <button class="btn" onclick="insertTable()">Table</button>
+                <button class="btn" onclick="insertCodeBlock()">Code</button>
+                <select id="languageSelect" class="language-select" onchange="updateCodeBlockLanguage()">
+                    <option value="javascript">JavaScript</option>
+                    <option value="python">Python</option>
+                    <option value="css">CSS</option>
+                    <option value="html">HTML</option>
+                    <option value="typescript">TypeScript</option>
+                    <option value="sql">SQL</option>
+                    <option value="json">JSON</option>
+                </select>
+            </div>
+            <div class="toolbar-group">
+                <button class="btn" onclick="toggleShortcuts()">Shortcuts</button>
+            </div>
+            <input type="file" id="fileInput" style="display: none" accept=".md">
+        </div>
+        <div class="editor-container">
+            <div class="editor">
+                <textarea id="markdown-input" placeholder="Write your markdown here..."></textarea>
+            </div>
+            <div class="preview" id="preview"></div>
+        </div>
+    </div>
+
+    <script>
+const { ipcRenderer } = require('electron');
+const editor = document.getElementById('markdown-input');
+const preview = document.getElementById('preview');
+const fileInput = document.getElementById('fileInput');
+const languageSelect = document.getElementById('languageSelect');
+
+// Override marked renderer to add copy buttons and Prism highlighting
+const renderer = new marked.Renderer();
+renderer.code = function(code, language) {
+    const validLanguage = Prism.languages[language] ? language : 'plaintext';
+    const highlightedCode = Prism.highlight(code, Prism.languages[validLanguage], validLanguage);
+    return `<pre><code class="language-${validLanguage}">${highlightedCode}</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>`;
+};
+
+marked.setOptions({
+    renderer: renderer,
+    breaks: true,
+    gfm: true
+});
+
+function updateCodeBlockLanguage() {
+    const language = languageSelect.value;
+    insertCodeBlock(language);
+}
+
+function insertCodeBlock(language = languageSelect.value) {
+    const codeTemplate = `\`\`\`${language}\n// Your code here\n\`\`\``;
+    insertAtCursor(codeTemplate);
+}
+
+function copyCode(button) {
+    const code = button.previousElementSibling.textContent;
+    navigator.clipboard.writeText(code);
+    const originalText = button.textContent;
+    button.textContent = 'Copied!';
+    setTimeout(() => {
+        button.textContent = originalText;
+    }, 2000);
+}
+
+function insertTable() {
+    const tableTemplate = `
+| Header 1 | Header 2 | Header 3 |
+|----------|----------|----------|
+| Row 1    | Cell 2   | Cell 3   |
+| Row 2    | Cell 2   | Cell 3   |
+`;
+    insertAtCursor(tableTemplate);
+}
+
+function insertAtCursor(text) {
+    const start = editor.selectionStart;
+    const end = editor.selectionEnd;
+    editor.value = editor.value.substring(0, start) + text + editor.value.substring(end);
+    editor.focus();
+    editor.selectionStart = start + text.length;
+    editor.selectionEnd = start + text.length;
+    updatePreview();
+}
+
+function updatePreview() {
+    const markdownText = editor.value;
+    const htmlContent = marked.parse(markdownText);
+    preview.innerHTML = htmlContent;
+    Prism.highlightAll();
+}
+
+// New Electron-specific file operations
+function newFile() {
+    if (confirm('Create new document? Any unsaved changes will be lost.')) {
+        editor.value = '';
+        updatePreview();
+    }
+}
+
+async function openFile() {
+    const content = await ipcRenderer.invoke('open-file');
+    if (content) {
+        editor.value = content;
+        updatePreview();
+    }
+}
+
+async function saveFile() {
+    const content = editor.value;
+    await ipcRenderer.invoke('save-file', content);
+}
+
+editor.addEventListener('input', updatePreview);
+
+// Initial content with syntax highlighting examples
+editor.value = `# Syntax Highlighting Demo
+
+## Python Example
+\`\`\`python
+def greet(name):
+    print(f"Hello, {name}!")
+    return True
+
+# Call the function
+result = greet("World")
+\`\`\`
+
+## JavaScript Example
+\`\`\`javascript
+const greeting = (name) => {
+    console.log(\`Hello, \${name}!\`);
+    return true;
+};
+
+// Call the function
+const result = greeting("World");
+\`\`\`
+
+## CSS Example
+\`\`\`css
+.container {
+    display: flex;
+    background-color: #f0f0f0;
+    padding: 20px;
+}
+
+.item {
+    color: #333;
+    margin: 10px;
+}
+\`\`\`
+
+## SQL Example
+\`\`\`sql
+SELECT users.name, orders.product
+FROM users
+JOIN orders ON users.id = orders.user_id
+WHERE orders.status = 'completed';
+\`\`\`
+
+Try different languages using the dropdown menu!`;
+updatePreview();    </script>
+</body>
+</html>
